@@ -21,7 +21,8 @@ public class MainActivity extends AppCompatActivity {
     private ProgressDialog dialog;
     private ListView listView;
     private ArrayAdapter adapter;
-    private static final String URL = "http://api.geonames.org/earthquakesJSON?north=20&south=-20&east=-60&west=-80&username=aporter";
+    //private static final String URL = "http://api.geonames.org/earthquakesJSON?north=20&south=-20&east=-60&west=-80&username=aporter";
+    private static final String URL = "http://siata.gov.co/DatosRedAire/app/RedAireAMVA_POECAUPB.geojson";
     private static final String TAG = "HttpGetTask";
 
     @Override
@@ -47,6 +48,11 @@ public class MainActivity extends AppCompatActivity {
         private static final String MAGNITUDE_TAG = "magnitude";
         private static final String EARTHQUAKE_TAG = "earthquakes";
 
+        private static final String FEATURES_TAG = "features";
+        private static final String GEOMETRY_TAG = "geometry";
+        private static final String PROPERTIES_TAG = "properties";
+        private static final String COORDINATES_TAG = "coordinates";
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -69,27 +75,34 @@ public class MainActivity extends AppCompatActivity {
             adapter.addAll(dataList);
         }
 
-        private ArrayList<String> parserData(String data){
+        private ArrayList<String> parserData(String data) {
             ArrayList<String> result = new ArrayList<>();
 
             //****************** Start Parse Response JSON Data *************
             try {
                 //****** Creates a new JSONObject with name/value mappings from the JSON string. ********
                 JSONObject responseObject = new JSONObject(data);
-                JSONArray earthquakes = responseObject.getJSONArray(EARTHQUAKE_TAG);
+                JSONArray features = responseObject.getJSONArray(FEATURES_TAG);
 
                 // Iterate over earthquakes list
-                for (int i = 0; i < earthquakes.length(); i++) {
+                for (int i = 0; i < features.length(); i++) {
                     // Get single earthquake data - a Map
-                    JSONObject earthquake = earthquakes.getJSONObject(i);
+                    JSONObject feature = features.getJSONObject(i);
+                    JSONObject geometry = feature.getJSONObject(GEOMETRY_TAG);
+                    JSONObject properties = feature.getJSONObject(PROPERTIES_TAG);
+                    JSONArray coordinates = geometry.getJSONArray(COORDINATES_TAG);
+                    double longitude = coordinates.getDouble(0);
+                    double latitude = coordinates.getDouble(1);
+                    long value = properties.getLong("NO2_1H-prom");
+
 
                     // Summarize earthquake data as a string and add it to result
-                    result.add("Magnitude: "
-                            + earthquake.get(MAGNITUDE_TAG) + ",  "
+                    result.add("NO2_1H-prom: "
+                            + value + ",  "
                             + LATITUDE_TAG + " :"
-                            + earthquake.getString(LATITUDE_TAG) + ",  "
+                            + latitude + ",  "
                             + LONGITUDE_TAG + " :"
-                            + earthquake.get(LONGITUDE_TAG));
+                            + longitude);
                 }
                 Log.v(TAG, "Result:" + result);
             } catch (JSONException e) {
